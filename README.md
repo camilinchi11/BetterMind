@@ -1,0 +1,2 @@
+# BetterMind
+Diosito Ayuda
