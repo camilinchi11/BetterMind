@@ -1,98 +1,149 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+// app/index.tsx
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { getHighScore } from "../utils/score";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const [highScore, setHighScore] = useState(0);
+  const bounceAnim = useState(new Animated.Value(1))[0];
+  
+  // Animation for the play button
+  const startBounceAnimation = () => {
+    Animated.sequence([
+      Animated.timing(bounceAnim, {
+        toValue: 1.1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(bounceAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => startBounceAnimation());
+  };
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  // Load high score and start animation when app opens
+  useEffect(() => {
+    async function loadHighScore() {
+      const storedScore = await getHighScore();
+      setHighScore(storedScore);
+    }
+    loadHighScore();
+    startBounceAnimation();
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.contentContainer}>
+        <Image 
+          source={require('../../assets/images/react-logo.png')} 
+          style={styles.logo} 
+          resizeMode="contain"
+        />
+        
+        <Text style={styles.title}>✨ MathFun Learning ✨</Text>
+        <Text style={styles.subtitle}>¡Aprende matemáticas jugando!</Text>
+        
+        <View style={styles.scoreCard}>
+          <Text style={styles.scoreTitle}>🏆 Récord Personal</Text>
+          <Text style={styles.scoreValue}>{highScore}</Text>
+        </View>
+        
+        <Animated.View style={{ transform: [{ scale: bounceAnim }] }}>
+          <TouchableOpacity
+            style={styles.playButton}
+            onPress={() => router.push("/game")}
+            activeOpacity={0.8}
+          >
+            <View style={styles.buttonGradient}>
+              <Text style={styles.buttonText}>🚀 ¡JUGAR AHORA!</Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </View>
   );
 }
 
+const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    backgroundColor: '#6A11CB',
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  logo: {
+    width: width * 0.4,
+    height: width * 0.4,
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#ffffff",
+    textAlign: "center",
+    marginBottom: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: "#f0f0f0",
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  scoreCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 15,
+    padding: 20,
+    width: width * 0.8,
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  scoreTitle: {
+    fontSize: 18,
+    color: "#ffffff",
+    marginBottom: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  scoreValue: {
+    fontSize: 40,
+    fontWeight: "bold",
+    color: "#FFD700",
+  },
+  playButton: {
+    width: width * 0.8,
+    height: 60,
+    borderRadius: 30,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  buttonGradient: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FF416C',
+    borderRadius: 30,
+  },
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 20,
+    fontWeight: "bold",
   },
 });
