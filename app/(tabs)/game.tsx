@@ -40,8 +40,8 @@ export default function GameScreen() {
       num2 = Math.floor(Math.random() * maxNum) + 1;
       answer = num1 + num2;
     } else if (operation === '-') {
-      num1 = Math.floor(Math.random() * maxNum) + 10;
-      num2 = Math.floor(Math.random() * num1) + 1;
+      num1 = Math.floor(Math.random() * maxNum) + 1;
+      num2 = Math.floor(Math.random() * num1);
       answer = num1 - num2;
     } else { // multiplication
       num1 = Math.floor(Math.random() * 10) + 1;
